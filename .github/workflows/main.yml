@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Determine the action link
         run: |
-          echo "::set-output name=GITHUB_WORKFLOW_URL::https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          echo ${{ core.setOutput('GITHUB_WORKFLOW_URL', 'https://github.com/' + github.repository + '/actions/runs/' + github.run_id }}
 
       - name: Dump stuff
         run: |
