@@ -15,28 +15,34 @@ jobs:
     steps:
       - name: Determine the action link
         run: |
-          echo GITHUB_WORKFLOW_URL=https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          echo "::set-output name=GITHUB_WORKFLOW_URL::https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
 
+      - name: Dump stuff
+        run: |
           # Dump things to check what's available
-          echo github
+          echo '::group::github'
           cat | python -mjson.tool <<EOF
           ${{ toJson(github) }}
           EOF
+          echo '::endgroup::'
 
-          echo env
+          echo '::group::env'
           cat | python -mjson.tool <<EOF
           ${{ toJson(env) }}
           EOF
+          echo '::endgroup::'
 
-          echo job
+          echo '::group:: job'
           cat | python -mjson.tool <<EOF
           ${{ toJson(job) }}
           EOF
+          echo '::endgroup::'
 
-          echo steps
+          echo '::group:: steps'
           cat | python -mjson.tool <<EOF
           ${{ toJson(steps) }}
           EOF
+          echo '::endgroup::'
 
       - name: Post to slack
         uses: rtCamp/action-slack-notify@v2.1.0
