@@ -17,8 +17,26 @@ jobs:
         run: |
           echo GITHUB_WORKFLOW_URL=https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
 
-          # Dump the environment to see what else we find
-          env
+          # Dump things to check what's available
+          echo github
+          cat | python -mjson.tool <<EOF
+          ${{ toJson(github) }}
+          EOF
+
+          echo env
+          cat | python -mjson.tool <<EOF
+          ${{ toJson(env) }}
+          EOF
+
+          echo job
+          cat | python -mjson.tool <<EOF
+          ${{ toJson(job) }}
+          EOF
+
+          echo steps
+          cat | python -mjson.tool <<EOF
+          ${{ toJson(steps) }}
+          EOF
 
       - name: Post to slack
         uses: rtCamp/action-slack-notify@v2.1.0
