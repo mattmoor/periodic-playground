@@ -13,10 +13,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Determine the action link
-        run: |
-          echo ${{ core.setOutput('GITHUB_WORKFLOW_URL', 'https://github.com/' + github.repository + '/actions/runs/' + github.run_id }}
-
       - name: Dump stuff
         run: |
           # Dump things to check what's available
@@ -56,4 +52,4 @@ jobs:
           MSG_MINIMAL: 'true'
           SLACK_TITLE: put-your-title-here
           SLACK_MESSAGE: |
-            This is a test of minimal messages.
+            You can see this run here: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
