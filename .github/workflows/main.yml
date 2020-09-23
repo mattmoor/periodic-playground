@@ -15,10 +15,13 @@ jobs:
       - name: Post to slack
         uses: rtCamp/action-slack-notify@v2.1.0
         env:
-          SLACK_CHANNEL: '@mattmoor'
-          SLACK_COLOR: '#3278BD'
           SLACK_ICON: http://github.com/mattmoor-sockpuppet.png?size=48
-          SLACK_MESSAGE: 'Test DMs'
-          SLACK_TITLE: Blah dee blah
           SLACK_USERNAME: sockpuppet
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+
+          SLACK_CHANNEL: '@mattmoor'
+          SLACK_COLOR: '#3278BD'
+          MSG_MINIMAL: 'true'
+          SLACK_TITLE: put-your-title-here
+          SLACK_MESSAGE: |
+            This is a test of minimal messages.
