@@ -13,9 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       actions-include: ${{ steps.load-matrix.outputs.actions-include }}
+      actions-names: ${{ steps.load-matrix.outputs.actions-names }}
       deps-include: ${{ steps.load-matrix.outputs.deps-include }}
+      deps-names: ${{ steps.load-matrix.outputs.deps-names }}
       gotool-include: ${{ steps.load-matrix.outputs.gotool-include }}
+      gotool-names: ${{ steps.load-matrix.outputs.gotool-names }}
       misspell-include: ${{ steps.load-matrix.outputs.misspell-include }}
+      misspell-names: ${{ steps.load-matrix.outputs.misspell-names }}
     steps:
     - name: Check out code onto GOPATH
       uses: actions/checkout@v2
@@ -34,10 +38,18 @@ jobs:
           cat ${GITHUB_WORKSPACE}/repos.yaml | yaml2json | jq -c "map(select(.name | test(${FILTER}) | not))"
         }
 
+        function filtered_names() {
+          filtered_repos "$1" | jq -c "map(.name)"
+        }
+
         echo "::set-output name=actions-include::$(filtered_repos actions-exclude.yaml)"
+        echo "::set-output name=actions-names::$(filtered_names actions-exclude.yaml)"
         echo "::set-output name=deps-include::$(filtered_repos deps-exclude.yaml)"
+        echo "::set-output name=deps-names::$(filtered_names deps-exclude.yaml)"
         echo "::set-output name=gotool-include::$(filtered_repos gotool-exclude.yaml)"
+        echo "::set-output name=gotool-names::$(filtered_names gotool-exclude.yaml)"
         echo "::set-output name=misspell-include::$(filtered_repos misspell-exclude.yaml)"
+        echo "::set-output name=misspell-names::$(filtered_names misspell-exclude.yaml)"
 
   update-deps:
     name: Update Deps and Codegen
@@ -46,6 +58,7 @@ jobs:
     strategy:
       fail-fast: false # Keep running if one leg fails.
       matrix:
+        name: ${{fromJson(needs.job1.outputs.deps-names)}}
         include: ${{fromJson(needs.job1.outputs.deps-include)}}
 
     steps:
@@ -61,6 +74,7 @@ jobs:
     strategy:
       fail-fast: false # Keep running if one leg fails.
       matrix:
+        name: ${{fromJson(needs.job1.outputs.gotool-names)}}
         include: ${{fromJson(needs.job1.outputs.gotool-include)}}
 
 
@@ -77,6 +91,7 @@ jobs:
     strategy:
       fail-fast: false # Keep running if one leg fails.
       matrix:
+        name: ${{fromJson(needs.job1.outputs.misspell-names)}}
         include: ${{fromJson(needs.job1.outputs.misspell-include)}}
 
 
@@ -93,6 +108,7 @@ jobs:
     strategy:
       fail-fast: false # Keep running if one leg fails.
       matrix:
+        name: ${{fromJson(needs.job1.outputs.actions-names)}}
         include: ${{fromJson(needs.job1.outputs.actions-include)}}
 
 
