@@ -45,7 +45,7 @@ jobs:
           filtered_repos "$1" | jq -c "map(.name)"
         }
 
-        for x in ( actions deps gotool misspell ); do
+        for x in actions deps gotool misspell ; do
           echo "::group::Matrix names for $x"
           filtered_names $x-exclude.yaml | jq .
           echo "::endgroup::"
