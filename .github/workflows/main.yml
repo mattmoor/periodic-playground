@@ -30,6 +30,7 @@ jobs:
         echo "::set-output name=matrix-include::$(cat ${GITHUB_WORKSPACE}/.github/workflows/main.yml | yaml2json)"
 
   build:
+    needs: job1
     runs-on: ubuntu-latest
 
     steps:
