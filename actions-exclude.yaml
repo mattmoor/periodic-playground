@@ -1,3 +1,5 @@
+# Haven't asked if they want them.
+- "google/exposure-notification-server"
 # Tekton doesn't want actions
 - "tektoncd/pipeline"
 - "tektoncd/triggers"
