@@ -9,7 +9,7 @@ on:
 #  - cron: '* * * * *'
 
 jobs:
-  job1:
+  meta:
     runs-on: ubuntu-latest
     outputs:
       actions-include: ${{ steps.load-matrix.outputs.actions-include }}
@@ -60,13 +60,13 @@ jobs:
 
   update-deps:
     name: Update Deps and Codegen
-    needs: job1
+    needs: meta
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false # Keep running if one leg fails.
       matrix:
-        name: ${{fromJson(needs.job1.outputs.deps-names)}}
-        include: ${{fromJson(needs.job1.outputs.deps-include)}}
+        name: ${{fromJson(needs.meta.outputs.deps-names)}}
+        include: ${{fromJson(needs.jometab1.outputs.deps-include)}}
 
     steps:
     - name: Copy Actions
@@ -76,13 +76,13 @@ jobs:
 
   gotool:
     name: Go Format and Imports
-    needs: job1
+    needs: meta
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false # Keep running if one leg fails.
       matrix:
-        name: ${{fromJson(needs.job1.outputs.gotool-names)}}
-        include: ${{fromJson(needs.job1.outputs.gotool-include)}}
+        name: ${{fromJson(needs.meta.outputs.gotool-names)}}
+        include: ${{fromJson(needs.meta.outputs.gotool-include)}}
 
 
     steps:
@@ -93,13 +93,13 @@ jobs:
 
   misspell:
     name: Fix Misspellings
-    needs: job1
+    needs: meta
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false # Keep running if one leg fails.
       matrix:
-        name: ${{fromJson(needs.job1.outputs.misspell-names)}}
-        include: ${{fromJson(needs.job1.outputs.misspell-include)}}
+        name: ${{fromJson(needs.meta.outputs.misspell-names)}}
+        include: ${{fromJson(needs.meta.outputs.misspell-include)}}
 
 
     steps:
@@ -110,13 +110,13 @@ jobs:
 
   update-actions:
     name: Update actions
-    needs: job1
+    needs: meta
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false # Keep running if one leg fails.
       matrix:
-        name: ${{fromJson(needs.job1.outputs.actions-names)}}
-        include: ${{fromJson(needs.job1.outputs.actions-include)}}
+        name: ${{fromJson(needs.meta.outputs.actions-names)}}
+        include: ${{fromJson(needs.meta.outputs.actions-include)}}
 
 
     steps:
