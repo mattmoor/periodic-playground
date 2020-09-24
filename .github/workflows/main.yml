@@ -12,7 +12,10 @@ jobs:
   job1:
     runs-on: ubuntu-latest
     outputs:
-      matrix-include: ${{ steps.load-matrix.outputs.matrix-include }}
+      actions-include: ${{ steps.load-matrix.outputs.actions-include }}
+      deps-include: ${{ steps.load-matrix.outputs.deps-include }}
+      gotool-include: ${{ steps.load-matrix.outputs.gotool-include }}
+      misspell-include: ${{ steps.load-matrix.outputs.misspell-include }}
     steps:
     - name: Check out code onto GOPATH
       uses: actions/checkout@v2
@@ -24,25 +27,70 @@ jobs:
     - id: load-matrix
       run: |
         go get github.com/bronze1man/yaml2json
-        
-        cat ${GITHUB_WORKSPACE}/repos.yaml | yaml2json
-        
-        echo "::set-output name=matrix-include::$(cat ${GITHUB_WORKSPACE}/repos.yaml | yaml2json)"
 
-  build:
-    needs: job1
+        function filtered_repos() {
+          local EXCLUDE="${1}"
+          cat ${GITHUB_WORKSPACE}/repos.yaml | yaml2json |
+            jq ".[] | select(.name | test($(cat ${EXCLUDE} | jq "[.[]] | join(\"|\")")) | not)"
+        }
+
+        echo "::set-output name=actions-include::$(filtered_repos actions-exclude.yaml)"
+        echo "::set-output name=deps-include::$(filtered_repos deps-exclude.yaml)"
+        echo "::set-output name=gotool-include::$(filtered_repos gotool-exclude.yaml)"
+        echo "::set-output name=misspell-include::$(filtered_repos misspell-exclude.yaml)"
+
+  update-deps:
+    name: Update Deps and Codegen
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false # Keep running if one leg fails.
       matrix:
-        name:
-        # Only run a subset
-        - 'knative/pkg'
-        - 'knative/caching'
-        - 'knative/networking'
-        - 'knative/serving'
-        - 'knative/eventing'
-        include: ${{fromJson(needs.job1.outputs.matrix-include)}}
+        include: ${{fromJson(needs.job1.outputs.deps-include)}}
+
+    steps:
+    - name: Copy Actions
+      shell: bash
+      run: |
+        echo "${{ matrix.name }} has channel ${{ matrix.channel }}"
+
+  gotool:
+    name: Go Format and Imports
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # Keep running if one leg fails.
+      matrix:
+        include: ${{fromJson(needs.job1.outputs.gotool-include)}}
+
+
+    steps:
+    - name: Copy Actions
+      shell: bash
+      run: |
+        echo "${{ matrix.name }} has channel ${{ matrix.channel }}"
+
+  misspell:
+    name: Fix Misspellings
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # Keep running if one leg fails.
+      matrix:
+        include: ${{fromJson(needs.job1.outputs.misspell-include)}}
+
+
+    steps:
+    - name: Copy Actions
+      shell: bash
+      run: |
+        echo "${{ matrix.name }} has channel ${{ matrix.channel }}"
+
+  update-actions:
+    name: Update actions
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # Keep running if one leg fails.
+      matrix:
+        include: ${{fromJson(needs.job1.outputs.actions-include)}}
+
 
     steps:
     - name: Copy Actions
