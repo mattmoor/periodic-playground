@@ -9,12 +9,28 @@ on:
 #  - cron: '* * * * *'
 
 jobs:
+  job1:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix-include: ${{ steps.load-matrix.outputs.matrix-include }}
+    steps:
+    - id: load-matrix
+      run: |
+        go get github.com/bronze1man/yaml2json
+        echo "::set-output name=matrix-innclude::$(cat .github/workflows/main.yaml | yaml2json)"
+
   build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Dump stuff
         run: |
+          
+          cat | python -mjson.tool <<EOF
+          ${{ needs.job1.outputs.include-matrix }}
+          EOF
+          
+          
           # Dump things to check what's available
           echo '::group::github'
           cat | python -mjson.tool <<EOF
