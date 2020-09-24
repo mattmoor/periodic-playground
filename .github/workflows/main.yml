@@ -37,7 +37,7 @@ jobs:
       - name: Dump stuff
         run: |
           
-          cat | python -mjson.tool <<EOF
+          cat | python -mjson.tool <<"EOF"
           ${{ needs.job1.outputs.matrix-include }}
           EOF
           
