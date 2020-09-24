@@ -1,0 +1,3 @@
+# Tekton doesn't want actions
+- "tektoncd/pipeline"
+- "tektoncd/triggers"
