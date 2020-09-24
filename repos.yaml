@@ -116,7 +116,24 @@
   channel: 'net-certmanager'
   assignees: ZhiminXiang
 
+# tektoncd
+- name: 'tektoncd/pipeline'
+  meta-organization: 'knative' # Pull actions from the Knative org.
+  repository: 'pipeline'
+  channel: '@vdemeester'
+  assignees: vdemeester ImJasonH
+- name: 'tektoncd/triggers'
+  meta-organization: 'knative' # Pull actions from the Knative org.
+  repository: 'triggers'
+  channel: '@ImJasonH'
+  assignees: dibyom ImJasonH
+
 # google
+- name: 'google/exposure-notifications-server'
+  meta-organization: 'knative' # Pull actions from the Knative org.
+  repository: 'exposure-notifications-server'
+  channel: '@helmick'
+  assignees: mikehelmick
 - name: 'google/knative-gcp'
   meta-organization: 'knative' # Pull actions from the Knative org.
   repository: 'knative-gcp'
