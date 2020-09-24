@@ -38,7 +38,7 @@ jobs:
         run: |
           
           cat | python -mjson.tool <<EOF
-          ${{ needs.job1.outputs.include-matrix }}
+          ${{ needs.job1.outputs.matrix-include }}
           EOF
           
           
