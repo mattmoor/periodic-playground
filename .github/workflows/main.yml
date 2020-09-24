@@ -25,58 +25,27 @@ jobs:
       run: |
         go get github.com/bronze1man/yaml2json
         
-        cat ${GITHUB_WORKSPACE}/.github/workflows/main.yml | yaml2json
+        cat ${GITHUB_WORKSPACE}/repos.yaml | yaml2json
         
-        echo "::set-output name=matrix-include::$(cat ${GITHUB_WORKSPACE}/.github/workflows/main.yml | yaml2json)"
+        echo "::set-output name=matrix-include::$(cat ${GITHUB_WORKSPACE}/repos.yaml | yaml2json)"
 
   build:
     needs: job1
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # Keep running if one leg fails.
+      matrix:
+        name:
+        # Only run a subset
+        - 'knative/pkg'
+        - 'knative/caching'
+        - 'knative/networking'
+        - 'knative/serving'
+        - 'knative/eventing'
+        include: ${{fromJson(needs.job1.outputs.matrix-include)}}
 
     steps:
-      - name: Dump stuff
-        run: |
-          
-          cat | python -mjson.tool <<"EOF"
-          ${{ needs.job1.outputs.matrix-include }}
-          EOF
-          
-          
-          # Dump things to check what's available
-          echo '::group::github'
-          cat | python -mjson.tool <<EOF
-          ${{ toJson(github) }}
-          EOF
-          echo '::endgroup::'
-
-          echo '::group::env'
-          cat | python -mjson.tool <<EOF
-          ${{ toJson(env) }}
-          EOF
-          echo '::endgroup::'
-
-          echo '::group:: job'
-          cat | python -mjson.tool <<EOF
-          ${{ toJson(job) }}
-          EOF
-          echo '::endgroup::'
-
-          echo '::group:: steps'
-          cat | python -mjson.tool <<EOF
-          ${{ toJson(steps) }}
-          EOF
-          echo '::endgroup::'
-
-      - name: Post to slack
-        uses: rtCamp/action-slack-notify@v2.1.0
-        env:
-          SLACK_ICON: http://github.com/mattmoor-sockpuppet.png?size=48
-          SLACK_USERNAME: sockpuppet
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-
-          SLACK_CHANNEL: '@mattmoor'
-          SLACK_COLOR: '#3278BD'
-          MSG_MINIMAL: 'true'
-          SLACK_TITLE: put-your-title-here
-          SLACK_MESSAGE: |
-            You can see this run here: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    - name: Copy Actions
+      shell: bash
+      run: |
+        echo "${{ matric.name }} has channel ${{ matrix.channel }}"
