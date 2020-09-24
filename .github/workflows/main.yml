@@ -22,7 +22,7 @@ jobs:
     - id: load-matrix
       run: |
         go get github.com/bronze1man/yaml2json
-        echo "::set-output name=matrix-innclude::$(cat .github/workflows/main.yaml | yaml2json)"
+        echo "::set-output name=matrix-innclude::$(cat .github/workflows/main.yml | yaml2json)"
 
   build:
     runs-on: ubuntu-latest
