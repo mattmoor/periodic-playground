@@ -48,4 +48,4 @@ jobs:
     - name: Copy Actions
       shell: bash
       run: |
-        echo "${{ matric.name }} has channel ${{ matrix.channel }}"
+        echo "${{ matrix.name }} has channel ${{ matrix.channel }}"
