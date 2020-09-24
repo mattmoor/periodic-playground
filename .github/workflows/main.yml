@@ -35,8 +35,8 @@ jobs:
         function filtered_repos() {
           local EXCLUDE="${1}"
           local FILTER=$(cat "${EXCLUDE}" | yaml2json | jq "join(\"|\")")
-          if [ -z "$FILTER" ]; then
-            FILTER="match-nothing-${RANDOM}"
+          if [ "$FILTER" = '""' ]; then
+            FILTER="\"match-nothing-${RANDOM}\""
           fi
           cat ${GITHUB_WORKSPACE}/repos.yaml | yaml2json | jq -c "map(select(.name | test(${FILTER}) | not))"
         }
