@@ -31,7 +31,7 @@ jobs:
         function filtered_repos() {
           local EXCLUDE="${1}"
           local FILTER=$(cat "${EXCLUDE}" | yaml2json | jq "join(\"|\")")
-          cat ${GITHUB_WORKSPACE}/repos.yaml | yaml2json | jq "map(select(.name | test(${FILTER}) | not))"
+          cat ${GITHUB_WORKSPACE}/repos.yaml | yaml2json | jq -c "map(select(.name | test(${FILTER}) | not))"
         }
 
         echo "::set-output name=actions-include::$(filtered_repos actions-exclude.yaml)"
