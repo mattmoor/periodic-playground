@@ -77,7 +77,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false # Keep running if one leg fails.
-      max-parallel: 5
       matrix:
         name: ${{fromJson(needs.meta.outputs.deps-names)}}
         include: ${{fromJson(needs.meta.outputs.deps-include)}}
@@ -132,7 +131,6 @@ jobs:
             continue
           fi
           echo "Found non-module diff: $x"
-          git diff $x
           echo "::set-env name=create_pr::true"
           break
         done
@@ -142,4 +140,5 @@ jobs:
       if: env.create_pr == 'true'
       run: |
         echo Hello there
+        git diff
         exit 1
