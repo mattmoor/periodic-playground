@@ -1,12 +1,22 @@
-name: CI
+# Copyright 2020 The Knative Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Auto Updates
 
 on:
-
   push:
     branches: [ 'master' ]
-
-#  schedule:
-#  - cron: '* * * * *'
 
 jobs:
   meta:
@@ -20,6 +30,8 @@ jobs:
       gotool-names: ${{ steps.load-matrix.outputs.gotool-names }}
       misspell-include: ${{ steps.load-matrix.outputs.misspell-include }}
       misspell-names: ${{ steps.load-matrix.outputs.misspell-names }}
+      prettier-include: ${{ steps.load-matrix.outputs.prettier-include }}
+      prettier-names: ${{ steps.load-matrix.outputs.prettier-names }}
     steps:
     - name: Check out code onto GOPATH
       uses: actions/checkout@v2
@@ -45,7 +57,7 @@ jobs:
           filtered_repos "$1" | jq -c "map(.name)"
         }
 
-        for x in actions deps gotool misspell ; do
+        for x in actions deps gotool misspell prettier ; do
           echo "::group::Matrix names for $x"
           filtered_names $x-exclude.yaml | jq .
           echo "::endgroup::"
@@ -58,69 +70,75 @@ jobs:
           echo "::set-output name=$x-names::$(filtered_names $x-exclude.yaml)"
         done
 
+
   update-deps:
     name: Update Deps and Codegen
     needs: meta
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false # Keep running if one leg fails.
+      max-parallel: 5
       matrix:
         name: ${{fromJson(needs.meta.outputs.deps-names)}}
         include: ${{fromJson(needs.meta.outputs.deps-include)}}
 
-    steps:
-    - name: Copy Actions
-      shell: bash
-      run: |
-        echo "${{ matrix.name }} has channel ${{ matrix.channel }}"
-
-  gotool:
-    name: Go Format and Imports
-    needs: meta
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false # Keep running if one leg fails.
-      matrix:
-        name: ${{fromJson(needs.meta.outputs.gotool-names)}}
-        include: ${{fromJson(needs.meta.outputs.gotool-include)}}
-
+    env:
+      GO111MODULE: on
 
     steps:
-    - name: Copy Actions
+
+    - name: Set up Go 1.15.x
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.15.x
+      id: go
+
+    - name: Check out code onto GOPATH
+      uses: actions/checkout@v2
+      with:
+        repository: ${{ matrix.name }}
+
+    - name: Install Dependencies
+      run: |
+        cd $(mktemp -d)
+        go get github.com/google/ko/cmd/ko
+        go get github.com/google/licenseclassifier
+        go get github.com/google/go-licenses
+
+    - name: Update Deps and Codegen
       shell: bash
       run: |
-        echo "${{ matrix.name }} has channel ${{ matrix.channel }}"
+        # Determine the name of the go module.
+        export MODULE_NAME=$(go mod graph | cut -d' ' -f 1 | grep -v '@' | head -1)
 
-  misspell:
-    name: Fix Misspellings
-    needs: meta
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false # Keep running if one leg fails.
-      matrix:
-        name: ${{fromJson(needs.meta.outputs.misspell-names)}}
-        include: ${{fromJson(needs.meta.outputs.misspell-include)}}
+        # TODO(mattmoor): Move this into `./hack/update-codegen.sh`
+        TMP_DIR="$(mktemp -d)"
+        export GOPATH=${GOPATH:-${TMP_DIR}}
+        export PATH="${PATH}:${TMP_DIR}/bin"
+        TMP_REPO_PATH="${TMP_DIR}/src/${MODULE_NAME}"
+        mkdir -p "$(dirname "${TMP_REPO_PATH}")" && ln -s "${GITHUB_WORKSPACE}" "${TMP_REPO_PATH}"
 
+        ./hack/update-deps.sh --upgrade
+        # We may pull in code-generator updates, or not have generated code.
+        [[ ! -f hack/update-codegen.sh ]] || ./hack/update-codegen.sh
 
-    steps:
-    - name: Copy Actions
+        echo "::set-env name=create_pr::false"
+        for x in $(git diff-index --name-only HEAD --); do
+          if [ "$(basename $x)" = "go.mod" ]; then
+            continue
+          elif [ "$(basename $x)" = "go.sum" ]; then
+            continue
+          elif [ "$(basename $x)" = "modules.txt" ]; then
+            continue
+          fi
+          echo "Found non-module diff: $x"
+          echo "::set-env name=create_pr::true"
+          break
+        done
+
+    - name: Next
       shell: bash
+      if: env.create_pr == 'true'
       run: |
-        echo "${{ matrix.name }} has channel ${{ matrix.channel }}"
-
-  update-actions:
-    name: Update actions
-    needs: meta
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false # Keep running if one leg fails.
-      matrix:
-        name: ${{fromJson(needs.meta.outputs.actions-names)}}
-        include: ${{fromJson(needs.meta.outputs.actions-include)}}
-
-
-    steps:
-    - name: Copy Actions
-      shell: bash
-      run: |
-        echo "${{ matrix.name }} has channel ${{ matrix.channel }}"
+        echo Hello there
+        exit 1
