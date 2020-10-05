@@ -132,6 +132,7 @@ jobs:
             continue
           fi
           echo "Found non-module diff: $x"
+          git diff $x
           echo "::set-env name=create_pr::true"
           break
         done
