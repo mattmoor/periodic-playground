@@ -19,67 +19,14 @@ on:
     branches: [ 'master' ]
 
 jobs:
-  meta:
-    runs-on: ubuntu-latest
-    outputs:
-      actions-include: ${{ steps.load-matrix.outputs.actions-include }}
-      actions-names: ${{ steps.load-matrix.outputs.actions-names }}
-      deps-include: ${{ steps.load-matrix.outputs.deps-include }}
-      deps-names: ${{ steps.load-matrix.outputs.deps-names }}
-      gotool-include: ${{ steps.load-matrix.outputs.gotool-include }}
-      gotool-names: ${{ steps.load-matrix.outputs.gotool-names }}
-      misspell-include: ${{ steps.load-matrix.outputs.misspell-include }}
-      misspell-names: ${{ steps.load-matrix.outputs.misspell-names }}
-      prettier-include: ${{ steps.load-matrix.outputs.prettier-include }}
-      prettier-names: ${{ steps.load-matrix.outputs.prettier-names }}
-    steps:
-    - name: Check out code onto GOPATH
-      uses: actions/checkout@v2
-    - name: Set up Go 1.15.x
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.15.x
-
-    - id: load-matrix
-      run: |
-        go get github.com/bronze1man/yaml2json
-
-        function filtered_repos() {
-          local EXCLUDE="${1}"
-          local FILTER=$(cat "${EXCLUDE}" | yaml2json | jq "join(\"|\")")
-          if [ "$FILTER" = '""' ]; then
-            FILTER="\"match-nothing-${RANDOM}\""
-          fi
-          cat ${GITHUB_WORKSPACE}/repos.yaml | yaml2json | jq -c "map(select(.name | test(${FILTER}) | not))"
-        }
-
-        function filtered_names() {
-          filtered_repos "$1" | jq -c "map(.name)"
-        }
-
-        for x in actions deps gotool misspell prettier ; do
-          echo "::group::Matrix names for $x"
-          filtered_names $x-exclude.yaml | jq .
-          echo "::endgroup::"
-
-          echo "::group::Matrix includes for $x"
-          filtered_repos $x-exclude.yaml | jq .
-          echo "::endgroup::"
-
-          echo "::set-output name=$x-include::$(filtered_repos $x-exclude.yaml)"
-          echo "::set-output name=$x-names::$(filtered_names $x-exclude.yaml)"
-        done
-
-
   update-deps:
     name: Update Deps and Codegen
-    needs: meta
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false # Keep running if one leg fails.
       matrix:
-        name: ${{fromJson(needs.meta.outputs.deps-names)}}
-        include: ${{fromJson(needs.meta.outputs.deps-include)}}
+        name: 
+        - 'knative/pkg'
 
     env:
       GO111MODULE: on
@@ -120,6 +67,10 @@ jobs:
         ./hack/update-deps.sh --upgrade
         # We may pull in code-generator updates, or not have generated code.
         [[ ! -f hack/update-codegen.sh ]] || ./hack/update-codegen.sh
+
+        # If we don't run this before the "git diff-index" it seems to list
+        # every file that's been touched by codegen.
+        git status
 
         echo "::set-env name=create_pr::false"
         for x in $(git diff-index --name-only HEAD --); do
