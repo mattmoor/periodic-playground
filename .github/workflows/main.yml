@@ -1,18 +1,24 @@
-name: MinKinD Smoke Test
+name: buildx test
 
 on:
   push:
     branches: [ master ]
 
 jobs:
-  e2e-tests:
-    name: e2e tests
+  buildx:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Install KinD
-      timeout-minutes: 1
-      run: |
-        echo Hi
-        sleep 60
-        echo Bye
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: latest
+
+      - name: Builder instance name
+        run: echo ${{ steps.buildx.outputs.name }}
+
+      - name: Available platforms
+        run: echo ${{ steps.buildx.outputs.platforms }}
