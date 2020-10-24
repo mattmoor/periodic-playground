@@ -33,7 +33,6 @@ jobs:
 
       - name: Build base
         run: |
-          # linux/ppc64le,linux/s390x
           docker buildx build \
-            --platform linux/amd64,linux/arm64 \
+            --platform linux/amd64,linux/arm64,linux/ppc64le,linux/s390x \
             --file ./images/Dockerfile --tag docker.io/mattmoor/testing:latest --push .
