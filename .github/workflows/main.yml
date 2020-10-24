@@ -30,6 +30,7 @@ jobs:
 
       - name: Build base
         run: |
+          # Could be: ${{ steps.buildx.outputs.platforms }}
           docker buildx build \
-            --platform ${{ steps.buildx.outputs.platforms }} \
+            --platform linux/amd64,linux/arm64,linux/ppc64le,linux/s390x \
             --file ./images/Dockerfile --tag docker.io/mattmoor/testing:latest --push .
